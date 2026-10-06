@@ -1,0 +1,324 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Randevu Detayı - BeautyTime{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <!-- Breadcrumb -->
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'home' %}">Ana Sayfa</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'appointment_list' %}">Randevularım</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Randevu Detayı</li>
+                </ol>
+            </nav>
+
+            <!-- Appointment Card -->
+            <div class="card shadow-lg border-0" data-aos="fade-up">
+                <div class="card-header bg-gradient-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h2 class="h4 mb-0">
+                            <i class="fas fa-calendar-check me-2"></i>Randevu Detayları
+                        </h2>
+                        <span class="badge bg-light text-dark px-3 py-2">
+                            #{{ appointment.id }}
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="card-body p-4">
+                    <!-- Status Alert -->
+                    {% if appointment.status == 'pending' %}
+                        <div class="alert alert-warning">
+                            <i class="fas fa-hourglass-half me-2"></i>
+                            <strong>Onay Bekliyor:</strong> Randevunuz henüz onaylanmadı. En kısa sürede size dönüş yapacağız.
+                        </div>
+                    {% elif appointment.status == 'confirmed' %}
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle me-2"></i>
+                            <strong>Onaylandı:</strong> Randevunuz onaylandı. Belirtilen tarih ve saatte salonumuzda olmanızı bekliyoruz.
+                        </div>
+                    {% elif appointment.status == 'cancelled' %}
+                        <div class="alert alert-danger">
+                            <i class="fas fa-times-circle me-2"></i>
+                            <strong>İptal Edildi:</strong> Bu randevu iptal edilmiştir.
+                            {% if appointment.cancellation_reason %}
+                                <br>Sebep: {{ appointment.cancellation_reason }}
+                            {% endif %}
+                        </div>
+                    {% elif appointment.status == 'completed' %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-check-double me-2"></i>
+                            <strong>Tamamlandı:</strong> Bu randevu tamamlanmıştır.
+                            {% if can_review %}
+                                <a href="{% url 'appointment_review' uuid=appointment.uuid %}" class="alert-link">Değerlendirme yap</a>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+
+                    <!-- Service Details -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h5 class="text-primary mb-3">
+                                <i class="fas fa-spa me-2"></i>Hizmet Bilgileri
+                            </h5>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td class="text-muted">Hizmet:</td>
+                                    <td class="fw-bold">{{ appointment.service.name }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Kategori:</td>
+                                    <td>{{ appointment.service.category.name }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Süre:</td>
+                                    <td>{{ appointment.service.duration }} dakika</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Ücret:</td>
+                                    <td class="fw-bold text-success">₺{{ appointment.final_price|floatformat:2 }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h5 class="text-primary mb-3">
+                                <i class="fas fa-user-tie me-2"></i>Uzman Bilgileri
+                            </h5>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td class="text-muted">Uzman:</td>
+                                    <td class="fw-bold">{{ appointment.employee.name }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Uzmanlık:</td>
+                                    <td>{{ appointment.employee.specialty }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Değerlendirme:</td>
+                                    <td>
+                                        {% if appointment.employee.average_rating %}
+                                            <span class="text-warning">
+                                                {% for i in "12345"|make_list %}
+                                                    {% if i|add:0 <= appointment.employee.average_rating %}
+                                                        <i class="fas fa-star"></i>
+                                                    {% else %}
+                                                        <i class="far fa-star"></i>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </span>
+                                            <small class="text-muted">({{ appointment.employee.average_rating|floatformat:1 }})</small>
+                                        {% else %}
+                                            <span class="text-muted">Henüz değerlendirme yok</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Date and Time -->
+                    <div class="bg-light rounded p-4 mb-4">
+                        <h5 class="text-primary mb-3">
+                            <i class="fas fa-clock me-2"></i>Tarih ve Saat
+                        </h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p class="mb-2">
+                                    <i class="fas fa-calendar-day me-2 text-muted"></i>
+                                    <strong>Tarih:</strong> {{ appointment.date_time|date:"d F Y, l" }}
+                                </p>
+                            </div>
+                            <div class="col-md-6">
+                                <p class="mb-2">
+                                    <i class="fas fa-clock me-2 text-muted"></i>
+                                    <strong>Saat:</strong> {{ appointment.date_time|date:"H:i" }} - {{ appointment.end_time|date:"H:i" }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Notes -->
+                    {% if appointment.notes %}
+                        <div class="mb-4">
+                            <h5 class="text-primary mb-3">
+                                <i class="fas fa-sticky-note me-2"></i>Notlar
+                            </h5>
+                            <p class="text-muted">{{ appointment.notes|linebreaksbr }}</p>
+                        </div>
+                    {% endif %}
+
+                    <!-- Status History -->
+                    {% if status_history %}
+                        <div class="mb-4">
+                            <h5 class="text-primary mb-3">
+                                <i class="fas fa-history me-2"></i>Durum Geçmişi
+                            </h5>
+                            <div class="timeline">
+                                {% for history in status_history %}
+                                    <div class="timeline-item">
+                                        <div class="timeline-marker"></div>
+                                        <div class="timeline-content">
+                                            <p class="mb-1">
+                                                <strong>{{ history.get_new_status_display }}</strong>
+                                                {% if history.old_status %}
+                                                    <small class="text-muted">({{ history.get_old_status_display }} → {{ history.get_new_status_display }})</small>
+                                                {% endif %}
+                                            </p>
+                                            {% if history.reason %}
+                                                <p class="text-muted small mb-1">{{ history.reason }}</p>
+                                            {% endif %}
+                                            <small class="text-muted">
+                                                {{ history.created_at|naturaltime }}
+                                                {% if history.changed_by %}
+                                                    - {{ history.changed_by.get_full_name|default:history.changed_by.username }}
+                                                {% endif %}
+                                            </small>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <!-- Review -->
+                    {% if review %}
+                        <div class="mb-4">
+                            <h5 class="text-primary mb-3">
+                                <i class="fas fa-star me-2"></i>Değerlendirmeniz
+                            </h5>
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <h6 class="card-title mb-0">{{ review.title|default:"Değerlendirme" }}</h6>
+                                        <span class="text-warning">
+                                            {% for i in "12345"|make_list %}
+                                                {% if i|add:0 <= review.rating %}
+                                                    <i class="fas fa-star"></i>
+                                                {% else %}
+                                                    <i class="far fa-star"></i>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </span>
+                                    </div>
+                                    <p class="card-text">{{ review.comment|linebreaksbr }}</p>
+                                    <small class="text-muted">{{ review.created_at|date:"d F Y" }}</small>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <!-- Action Buttons -->
+                    <div class="d-flex flex-wrap gap-2 justify-content-center">
+                        {% if can_cancel %}
+                            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#cancelModal">
+                                <i class="fas fa-times me-2"></i>Randevuyu İptal Et
+                            </button>
+                        {% endif %}
+                        
+                        {% if can_reschedule %}
+                            <a href="{% url 'appointment_reschedule' uuid=appointment.uuid %}" class="btn btn-warning">
+                                <i class="fas fa-calendar-alt me-2"></i>Tarihi Değiştir
+                            </a>
+                        {% endif %}
+                        
+                        {% if can_review %}
+                            <a href="{% url 'appointment_review' uuid=appointment.uuid %}" class="btn btn-success">
+                                <i class="fas fa-star me-2"></i>Değerlendir
+                            </a>
+                        {% endif %}
+                        
+                        <a href="{% url 'appointment_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Randevularıma Dön
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cancel Modal -->
+{% if can_cancel %}
+<div class="modal fade" id="cancelModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle text-warning me-2"></i>Randevu İptali
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'appointment_cancel' uuid=appointment.uuid %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <p>Bu randevuyu iptal etmek istediğinize emin misiniz?</p>
+                    <div class="alert alert-warning">
+                        <strong>{{ appointment.service.name }}</strong> - {{ appointment.date_time|date:"d F Y, H:i" }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="cancellation_reason" class="form-label">İptal Nedeni (İsteğe Bağlı)</label>
+                        <textarea class="form-control" id="cancellation_reason" name="cancellation_reason" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Vazgeç</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-times me-2"></i>Randevuyu İptal Et
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<style>
+/* Timeline Styles */
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 10px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #e9ecef;
+}
+
+.timeline-item {
+    position: relative;
+    padding-bottom: 1.5rem;
+}
+
+.timeline-item:last-child {
+    padding-bottom: 0;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -20px;
+    top: 5px;
+    width: 12px;
+    height: 12px;
+    background: #667eea;
+    border-radius: 50%;
+    border: 2px solid white;
+    box-shadow: 0 0 0 2px #e9ecef;
+}
+
+.timeline-content {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+}
+</style>
+{% endblock %}

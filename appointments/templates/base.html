@@ -1,0 +1,273 @@
+<!-- randevu_sistemi/templates/base.html -->
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Online Randevu Sistemi{% endblock %}</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- FullCalendar CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
+    
+    <!-- Toastr CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet">
+    
+    <!-- AOS Animation CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
+    
+    {% load static %}
+    <link href="{% static 'css/site.css' %}" rel="stylesheet">
+    
+    {% block head_extra %}{% endblock %}
+</head>
+<body class="d-flex flex-column min-vh-100">
+    <!-- Loading Spinner -->
+    <div id="loading-spinner" class="loading-overlay">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Yükleniyor...</span>
+        </div>
+    </div>
+
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-gradient-primary shadow-lg fixed-top">
+            <div class="container">
+                <a class="navbar-brand fw-bold d-flex align-items-center" href="{% url 'home' %}">
+                    <i class="fas fa-calendar-check me-2 fs-4"></i>
+                    <span class="gradient-text">BeautyTime</span>
+                </a>
+                
+                <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto align-items-lg-center">
+                        <li class="nav-item">
+                            <a class="nav-link px-3 rounded-pill mx-1 {% if request.resolver_match.url_name == 'home' %}active{% endif %}" 
+                               href="{% url 'home' %}">
+                                <i class="fas fa-home me-1"></i>Ana Sayfa
+                            </a>
+                        </li>
+                        
+                        {% if user.is_authenticated %}
+                            <li class="nav-item">
+                                <a class="nav-link px-3 rounded-pill mx-1 {% if request.resolver_match.url_name == 'appointment_list' %}active{% endif %}" 
+                                   href="{% url 'appointment_list' %}">
+                                    <i class="fas fa-calendar-alt me-1"></i>Randevularım
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link px-3 rounded-pill mx-1 {% if request.resolver_match.url_name == 'appointment_create' %}active{% endif %}" 
+                                   href="{% url 'appointment_create' %}">
+                                    <i class="fas fa-plus-circle me-1"></i>Randevu Al
+                                </a>
+                            </li>
+                            <li class="nav-item position-relative">
+                                <a class="nav-link px-3 rounded-pill mx-1 {% if request.resolver_match.url_name == 'notification_list' %}active{% endif %}" 
+                                   href="{% url 'notification_list' %}">
+                                    <i class="fas fa-bell me-1"></i>Bildirimler
+                                    <span class="notification-badge">3</span>
+                                </a>
+                            </li>
+                            
+                             {% if user.is_superuser or user.is_staff %}
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle px-3 rounded-pill mx-1" href="#" id="adminDropdown" 
+                                       role="button" data-bs-toggle="dropdown">
+                                        <i class="fas fa-cog me-1"></i>Yönetim
+                                    </a>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li><a class="dropdown-item" href="{% url 'staff_dashboard' %}">
+                                            <i class="fas fa-tachometer-alt me-2"></i>Personel Paneli
+                                        </a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item" href="{% url 'admin:index' %}" target="_blank">
+                                            <i class="fas fa-cogs me-2"></i>Django Admin
+                                        </a></li>
+                                    </ul>
+                                </li>
+                            {% endif %}
+                            
+                            <li class="nav-item dropdown ms-2">
+                                <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="navbarDropdownUserMenu" 
+                                   role="button" data-bs-toggle="dropdown">
+                                    <div class="user-avatar me-2">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                    <span class="d-none d-lg-inline">{{ user.get_full_name|default:user.username }}</span>
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end shadow border-0">
+                                    <li><h6 class="dropdown-header">Hesap İşlemleri</h6></li>
+                                    <li><a class="dropdown-item" href="{% url 'password_change' %}">
+                                        <i class="fas fa-key me-2"></i>Şifre Değiştir
+                                    </a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <form action="{% url 'logout' %}" method="post" class="d-inline">
+                                            {% csrf_token %}
+                                            <button type="submit" class="dropdown-item text-danger">
+                                                <i class="fas fa-sign-out-alt me-2"></i>Çıkış Yap
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </li>
+                        {% else %}
+                            <li class="nav-item">
+                                <a class="nav-link px-3 rounded-pill mx-1 {% if request.resolver_match.url_name == 'login' %}active{% endif %}" 
+                                   href="{% url 'login' %}">
+                                    <i class="fas fa-sign-in-alt me-1"></i>Giriş Yap
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="btn btn-outline-light rounded-pill px-4 ms-2" href="{% url 'register' %}">
+                                    <i class="fas fa-user-plus me-1"></i>Kayıt Ol
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+    
+    <main class="container-fluid mt-5 pt-4 flex-grow-1">
+        {% if messages %}
+            <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1055">
+                {% for message in messages %}
+                    <div class="toast align-items-center text-white {% if message.tags == 'success' %}bg-success{% elif message.tags == 'error' %}bg-danger{% elif message.tags == 'warning' %}bg-warning{% else %}bg-info{% endif %} border-0 show" 
+                         role="alert" data-bs-delay="5000">
+                        <div class="d-flex">
+                            <div class="toast-body">
+                                <i class="fas fa-check-circle me-2"></i>
+                                {{ message }}
+                            </div>
+                            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <footer class="footer mt-auto py-4 bg-dark text-light">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-4 mb-3">
+                    <h5 class="text-primary">
+                        <i class="fas fa-calendar-check me-2"></i>BeautyTime
+                    </h5>
+                    <p class="text-muted">Güzellik ve bakım randevularınızı kolayca planlayın. Profesyonel hizmet, modern teknoloji.</p>
+                </div>
+                <div class="col-lg-4 mb-3">
+                    <h6>Hızlı Linkler</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="{% url 'home' %}" class="text-light text-decoration-none">Ana Sayfa</a></li>
+                        {% if user.is_authenticated %}
+                            <li><a href="{% url 'appointment_create' %}" class="text-light text-decoration-none">Randevu Al</a></li>
+                            <li><a href="{% url 'appointment_list' %}" class="text-light text-decoration-none">Randevularım</a></li>
+                        {% endif %}
+                    </ul>
+                </div>
+                <div class="col-lg-4 mb-3">
+                    <h6>İletişim</h6>
+                    <ul class="list-unstyled text-muted">
+                        <li><i class="fas fa-phone me-2"></i>+90 (555) 123 45 67</li>
+                        <li><i class="fas fa-envelope me-2"></i>info@beautytime.com</li>
+                        <li><i class="fas fa-map-marker-alt me-2"></i>İstanbul, Türkiye</li>
+                    </ul>
+                </div>
+            </div>
+            <hr class="border-secondary">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <p class="mb-0 text-muted">© {% now "Y" %} BeautyTime. Tüm hakları saklıdır.</p>
+                </div>
+                <div class="col-md-6 text-end">
+                    <a href="#" class="text-light me-3"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" class="text-light me-3"><i class="fab fa-instagram"></i></a>
+                    <a href="#" class="text-light me-3"><i class="fab fa-twitter"></i></a>
+                    <a href="#" class="text-light"><i class="fab fa-whatsapp"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/locales/tr.global.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
+    
+    {% load static %}
+    <script src="{% static 'js/site.js' %}"></script>
+    
+    <script>
+        // Loading spinner
+        window.addEventListener('load', function() {
+            document.getElementById('loading-spinner').style.display = 'none';
+        });
+
+        // AOS Animation
+        AOS.init({
+            duration: 800,
+            easing: 'ease-in-out',
+            once: true
+        });
+
+        // Toastr configuration
+        toastr.options = {
+            "closeButton": true,
+            "progressBar": true,
+            "positionClass": "toast-top-right",
+            "timeOut": "5000",
+            "extendedTimeOut": "1000",
+            "showMethod": "fadeIn",
+            "hideMethod": "fadeOut"
+        };
+
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == 'success' %}
+                    toastr.success("{{ message|escapejs }}");
+                {% elif message.tags == 'error' %}
+                    toastr.error("{{ message|escapejs }}");
+                {% elif message.tags == 'warning' %}
+                    toastr.warning("{{ message|escapejs }}");
+                {% else %}
+                    toastr.info("{{ message|escapejs }}");
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+
+        // Smooth scrolling
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
+    
+    {% block scripts %}{% endblock %}
+</body>
+</html>

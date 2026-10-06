@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Sıkça Sorulan Sorular - BeautyTime{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="text-center mb-5" data-aos="fade-up">
+                <h1 class="display-4 fw-bold">Sıkça Sorulan Sorular</h1>
+                <p class="lead text-muted">Merak ettiğiniz her şey burada</p>
+            </div>
+            
+            {% for category, faqs in faqs_by_category.items %}
+            <div class="mb-5" data-aos="fade-up" data-aos-delay="{{ forloop.counter0|add:1 }}00">
+                <h3 class="mb-4 text-primary">{{ category }}</h3>
+                
+                <div class="accordion" id="faqAccordion{{ forloop.counter0 }}">
+                    {% for faq in faqs %}
+                    <div class="accordion-item border-0 mb-3 shadow-sm">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button {% if not forloop.first %}collapsed{% endif %}" 
+                                    type="button" 
+                                    data-bs-toggle="collapse" 
+                                    data-bs-target="#faq{{ faq.id }}" 
+                                    aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}">
+                                <i class="fas fa-question-circle me-2 text-primary"></i>
+                                {{ faq.question }}
+                            </button>
+                        </h2>
+                        <div id="faq{{ faq.id }}" 
+                             class="accordion-collapse collapse {% if forloop.first %}show{% endif %}" 
+                             data-bs-parent="#faqAccordion{{ forloop.parentloop.counter0 }}">
+                            <div class="accordion-body">
+                                {{ faq.answer|linebreaksbr }}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% empty %}
+            <div class="text-center py-5">
+                <i class="fas fa-question fa-3x text-muted mb-3"></i>
+                <p class="text-muted">Henüz sıkça sorulan soru eklenmemiş.</p>
+            </div>
+            {% endfor %}
+            
+            <!-- Contact CTA -->
+            <div class="text-center mt-5 p-5 bg-light rounded" data-aos="fade-up">
+                <h4 class="mb-3">Sorunuz mu var?</h4>
+                <p class="text-muted mb-4">Aradığınız cevabı bulamadıysanız, bize ulaşın!</p>
+                <a href="{% url 'contact' %}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-envelope me-2"></i>İletişime Geç
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Profilim - BeautyTime{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-4 mb-4">
+            <!-- Profile Card -->
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <div class="user-avatar mx-auto" style="width: 100px; height: 100px; font-size: 2rem;">
+                            <i class="fas fa-user"></i>
+                        </div>
+                    </div>
+                    <h4>{{ user.get_full_name|default:user.username }}</h4>
+                    <p class="text-muted">{{ user.email }}</p>
+                    <hr>
+                    <p><strong>Telefon:</strong> {{ profile.phone|default:"Belirtilmemiş" }}</p>
+                    <p><strong>Üyelik Tarihi:</strong> {{ user.date_joined|date:"d F Y" }}</p>
+                    <a href="{% url 'profile_edit' %}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-edit me-2"></i>Profili Düzenle
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-8">
+            <!-- Stats Cards -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body">
+                            <h5 class="card-title">Toplam Randevu</h5>
+                            <h2>{{ stats.total_appointments }}</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card bg-success text-white">
+                        <div class="card-body">
+                            <h5 class="card-title">Tamamlanan</h5>
+                            <h2>{{ stats.completed_appointments }}</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card bg-info text-white">
+                        <div class="card-body">
+                            <h5 class="card-title">Toplam Harcama</h5>
+                            <h2>₺{{ stats.total_spent|floatformat:0|intcomma }}</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card bg-warning text-white">
+                        <div class="card-body">
+                            <h5 class="card-title">Favori Hizmet</h5>
+                            <h5>{{ stats.favorite_service }}</h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Quick Actions -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Hızlı İşlemler</h5>
+                </div>
+                <div class="card-body">
+                    <a href="{% url 'appointment_create' %}" class="btn btn-primary me-2">
+                        <i class="fas fa-plus me-2"></i>Yeni Randevu
+                    </a>
+                    <a href="{% url 'appointment_list' %}" class="btn btn-outline-primary me-2">
+                        <i class="fas fa-list me-2"></i>Randevularım
+                    </a>
+                    <a href="{% url 'password_change' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-key me-2"></i>Şifre Değiştir
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Hakkımızda - BeautyTime{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="py-5" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    <div class="container">
+        <div class="row align-items-center text-white">
+            <div class="col-lg-12 text-center" data-aos="fade-up">
+                <h1 class="display-4 fw-bold mb-4">BeautyTime Hakkında</h1>
+                <p class="lead">Güzellik ve bakımda 3 yıllık deneyimimizle sizlere hizmet veriyoruz</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- About Content -->
+<section class="py-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6 mb-4" data-aos="fade-right">
+                <h2 class="h1 fw-bold mb-4">Biz Kimiz?</h2>
+                <p class="lead mb-4">
+                    BeautyTime olarak, müşterilerimize en kaliteli güzellik ve bakım hizmetlerini sunmak için 2021 yılında yola çıktık.
+                </p>
+                <p>
+                    Modern ekipmanlarımız, uzman kadromuz ve hijyenik ortamımızla sizlere hak ettiğiniz hizmeti sunuyoruz. 
+                    Amacımız, sadece dış güzelliğinizi değil, kendinizi iyi hissetmenizi de sağlamak.
+                </p>
+                <p>
+                    Sürekli kendini yenileyen ekibimiz, dünya trendlerini yakından takip ederek size en güncel güzellik 
+                    uygulamalarını sunuyor.
+                </p>
+            </div>
+            <div class="col-lg-6 mb-4" data-aos="fade-left">
+                <img src="https://images.unsplash.com/photo-1560066984-138dadb4c035?ixlib=rb-4.0.3&w=600" 
+                     alt="Salon Görünümü" class="img-fluid rounded shadow">
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Stats -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row text-center">
+            <div class="col-md-3 mb-4" data-aos="fade-up" data-aos-delay="100">
+                <div class="h1 fw-bold text-primary">{{ stats.total_customers }}+</div>
+                <p class="text-muted">Mutlu Müşteri</p>
+            </div>
+            <div class="col-md-3 mb-4" data-aos="fade-up" data-aos-delay="200">
+                <div class="h1 fw-bold text-primary">{{ stats.total_appointments }}+</div>
+                <p class="text-muted">Tamamlanan Randevu</p>
+            </div>
+            <div class="col-md-3 mb-4" data-aos="fade-up" data-aos-delay="300">
+                <div class="h1 fw-bold text-primary">{{ stats.total_services }}+</div>
+                <p class="text-muted">Hizmet Çeşidi</p>
+            </div>
+            <div class="col-md-3 mb-4" data-aos="fade-up" data-aos-delay="400">
+                <div class="h1 fw-bold text-primary">{{ stats.average_rating|floatformat:1 }}</div>
+                <p class="text-muted">Ortalama Puan</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Team -->
+<section class="py-5">
+    <div class="container">
+        <div class="text-center mb-5" data-aos="fade-up">
+            <h2 class="h1 fw-bold">Uzman Ekibimiz</h2>
+            <p class="lead text-muted">Alanında uzman, deneyimli kadromuzla tanışın</p>
+        </div>
+        
+        <div class="row">
+            {% for employee in featured_employees %}
+            <div class="col-lg-3 col-md-6 mb-4" data-aos="fade-up" data-aos-delay="{{ forloop.counter0|add:1 }}00">
+                <div class="card border-0 shadow h-100 text-center">
+                    <div class="card-body">
+                        <div class="mb-3">
+                            {% if employee.photo %}
+                                <img src="{{ employee.photo.url }}" alt="{{ employee.name }}" 
+                                     class="rounded-circle" style="width: 120px; height: 120px; object-fit: cover;">
+                            {% else %}
+                                <div class="rounded-circle bg-gradient-primary text-white d-inline-flex align-items-center justify-content-center" 
+                                     style="width: 120px; height: 120px;">
+                                    <i class="fas fa-user fa-3x"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <h5 class="card-title">{{ employee.name }}</h5>
+                        <p class="text-muted">{{ employee.title }}</p>
+                        <p class="small">{{ employee.specialty }}</p>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Values -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="text-center mb-5" data-aos="fade-up">
+            <h2 class="h1 fw-bold">Değerlerimiz</h2>
+            <p class="lead text-muted">Müşteri memnuniyeti önceliğimizdir</p>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-4 mb-4" data-aos="fade-up" data-aos-delay="100">
+                <div class="text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-award fa-3x text-primary"></i>
+                    </div>
+                    <h4>Kalite</h4>
+                    <p>En kaliteli ürünler ve en güncel tekniklerle hizmet veriyoruz.</p>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4" data-aos="fade-up" data-aos-delay="200">
+                <div class="text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-shield-alt fa-3x text-primary"></i>
+                    </div>
+                    <h4>Güven</h4>
+                    <p>Hijyen ve güvenlik standartlarında taviz vermiyoruz.</p>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4" data-aos="fade-up" data-aos-delay="300">
+                <div class="text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-heart fa-3x text-primary"></i>
+                    </div>
+                    <h4>Özen</h4>
+                    <p>Her müşterimize özel ilgi ve özen gösteriyoruz.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA -->
+<section class="py-5" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    <div class="container text-center text-white" data-aos="fade-up">
+        <h2 class="h1 fw-bold mb-4">Güzellik Yolculuğunuza Başlayın</h2>
+        <p class="lead mb-4">Uzman ekibimizle tanışmak ve hizmetlerimizden faydalanmak için hemen randevu alın.</p>
+        <a href="{% url 'appointment_create' %}" class="btn btn-light btn-lg">
+            <i class="fas fa-calendar-plus me-2"></i>Randevu Al
+        </a>
+    </div>
+</section>
+{% endblock %}

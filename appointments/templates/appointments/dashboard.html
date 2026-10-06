@@ -1,0 +1,266 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Dashboard - BeautyTime{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Welcome Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-primary bg-gradient-primary text-white border-0" data-aos="fade-down">
+                <h4 class="alert-heading">
+                    <i class="fas fa-sun me-2"></i>Hoş Geldiniz, {{ user.get_full_name|default:user.username }}!
+                </h4>
+                <p class="mb-0">BeautyTime'da bugün nasıl yardımcı olabiliriz?</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row g-4 mb-5">
+        <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="100">
+            <div class="stats-card text-center h-100">
+                <div class="stats-icon mb-3 mx-auto" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <i class="fas fa-calendar-check" style="font-size: 2rem; color: white;"></i>
+                </div>
+                <h3 class="stats-number">{{ stats.total_appointments }}</h3>
+                <p class="stats-label">Toplam Randevu</p>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="200">
+            <div class="stats-card text-center h-100">
+                <div class="stats-icon mb-3 mx-auto" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                    <i class="fas fa-hourglass-half" style="font-size: 2rem; color: white;"></i>
+                </div>
+                <h3 class="stats-number">{{ stats.pending_appointments }}</h3>
+                <p class="stats-label">Bekleyen Randevu</p>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="300">
+            <div class="stats-card text-center h-100">
+                <div class="stats-icon mb-3 mx-auto" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                    <i class="fas fa-check-circle" style="font-size: 2rem; color: white;"></i>
+                </div>
+                <h3 class="stats-number">{{ stats.completed_appointments }}</h3>
+                <p class="stats-label">Tamamlanan</p>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="400">
+            <div class="stats-card text-center h-100">
+                <div class="stats-icon mb-3 mx-auto" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+                    <i class="fas fa-lira-sign" style="font-size: 2rem; color: white;"></i>
+                </div>
+                <h3 class="stats-number">₺{{ stats.total_spent|floatformat:0|intcomma }}</h3>
+                <p class="stats-label">Toplam Harcama</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Upcoming Appointments -->
+        <div class="col-lg-8 mb-4">
+            <div class="card border-0 shadow-sm h-100" data-aos="fade-up" data-aos-delay="500">
+                <div class="card-header bg-gradient-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-calendar-alt me-2"></i>Yaklaşan Randevularınız
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if upcoming_appointments %}
+                        <div class="list-group list-group-flush">
+                            {% for appointment in upcoming_appointments %}
+                                <a href="{% url 'appointment_detail' uuid=appointment.uuid %}" 
+                                   class="list-group-item list-group-item-action border-0 px-0">
+                                    <div class="d-flex w-100 justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="mb-1">{{ appointment.service.name }}</h6>
+                                            <p class="mb-1 text-muted">
+                                                <i class="fas fa-user-tie me-1"></i>{{ appointment.employee.name }}
+                                            </p>
+                                            <small class="text-muted">
+                                                <i class="fas fa-clock me-1"></i>{{ appointment.date_time|date:"d F Y, H:i" }}
+                                            </small>
+                                        </div>
+                                        <span class="badge bg-{{ appointment.status|default:'warning' }} rounded-pill">
+                                            {{ appointment.get_status_display }}
+                                        </span>
+                                    </div>
+                                </a>
+                            {% endfor %}
+                        </div>
+                        <div class="text-center mt-3">
+                            <a href="{% url 'appointment_list' %}" class="btn btn-sm btn-outline-primary">
+                                Tüm Randevuları Gör
+                            </a>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-calendar-times text-muted mb-3" style="font-size: 3rem;"></i>
+                            <p class="text-muted">Yaklaşan randevunuz bulunmuyor.</p>
+                            <a href="{% url 'appointment_create' %}" class="btn btn-primary">
+                                <i class="fas fa-plus-circle me-2"></i>Randevu Oluştur
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Notifications -->
+        <div class="col-lg-4 mb-4">
+            <div class="card border-0 shadow-sm h-100" data-aos="fade-up" data-aos-delay="600">
+                <div class="card-header bg-gradient-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-bell me-2"></i>Bildirimler
+                        </h5>
+                        {% if notifications_unread %}
+                            <span class="badge bg-light text-primary">{{ notifications_unread|length }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if notifications_unread %}
+                        <div class="list-group list-group-flush">
+                            {% for notification in notifications_unread %}
+                                <a href="{% url 'notification_mark_read' pk=notification.pk %}" 
+                                   class="list-group-item list-group-item-action border-0 px-0">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <div>
+                                            <h6 class="mb-1">{{ notification.title }}</h6>
+                                            <p class="mb-1 text-muted small">{{ notification.message|truncatewords:10 }}</p>
+                                        </div>
+                                    </div>
+                                    <small class="text-muted">{{ notification.created_at|naturaltime }}</small>
+                                </a>
+                            {% endfor %}
+                        </div>
+                        <div class="text-center mt-3">
+                            <a href="{% url 'notification_list' %}" class="btn btn-sm btn-outline-primary">
+                                Tüm Bildirimleri Gör
+                            </a>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-bell-slash text-muted mb-3" style="font-size: 2.5rem;"></i>
+                            <p class="text-muted">Yeni bildiriminiz yok.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm" data-aos="fade-up" data-aos-delay="700">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="fas fa-bolt me-2 text-warning"></i>Hızlı İşlemler
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-3 col-6">
+                            <a href="{% url 'appointment_create' %}" class="btn btn-outline-primary w-100 py-3">
+                                <i class="fas fa-calendar-plus mb-2 d-block" style="font-size: 2rem;"></i>
+                                Yeni Randevu
+                            </a>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <a href="{% url 'service_list' %}" class="btn btn-outline-info w-100 py-3">
+                                <i class="fas fa-spa mb-2 d-block" style="font-size: 2rem;"></i>
+                                Hizmetler
+                            </a>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <a href="{% url 'profile_view' %}" class="btn btn-outline-success w-100 py-3">
+                                <i class="fas fa-user-circle mb-2 d-block" style="font-size: 2rem;"></i>
+                                Profilim
+                            </a>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <a href="{% url 'contact' %}" class="btn btn-outline-secondary w-100 py-3">
+                                <i class="fas fa-headset mb-2 d-block" style="font-size: 2rem;"></i>
+                                Destek
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Completed Appointments -->
+    {% if recent_completed_appointments %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm" data-aos="fade-up" data-aos-delay="800">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="fas fa-history me-2 text-info"></i>Son Tamamlanan Randevular
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Hizmet</th>
+                                    <th>Uzman</th>
+                                    <th>Tarih</th>
+                                    <th>Değerlendirme</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for appointment in recent_completed_appointments %}
+                                <tr>
+                                    <td>{{ appointment.service.name }}</td>
+                                    <td>{{ appointment.employee.name }}</td>
+                                    <td>{{ appointment.date_time|date:"d.m.Y" }}</td>
+                                    <td>
+                                        {% if appointment.review %}
+                                            <span class="text-warning">
+                                                {% for i in "12345"|make_list %}
+                                                    {% if i|add:0 <= appointment.review.rating %}
+                                                        <i class="fas fa-star"></i>
+                                                    {% else %}
+                                                        <i class="far fa-star"></i>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </span>
+                                        {% else %}
+                                            <a href="{% url 'appointment_review' uuid=appointment.uuid %}" 
+                                               class="btn btn-sm btn-outline-warning">
+                                                <i class="fas fa-star me-1"></i>Değerlendir
+                                            </a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.stats-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+</style>
+{% endblock %}

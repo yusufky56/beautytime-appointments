@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}Randevu Yeniden Planla - BeautyTime{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-gradient-primary text-white">
+                    <h2 class="h4 mb-0">
+                        <i class="fas fa-calendar-alt me-2"></i>Randevu Yeniden Planlama
+                    </h2>
+                </div>
+                
+                <div class="card-body p-4">
+                    <!-- Current Appointment Info -->
+                    <div class="alert alert-info">
+                        <h6 class="alert-heading">Mevcut Randevu Bilgileri:</h6>
+                        <p class="mb-1"><strong>Hizmet:</strong> {{ appointment.service.name }}</p>
+                        <p class="mb-1"><strong>Uzman:</strong> {{ appointment.employee.name }}</p>
+                        <p class="mb-0"><strong>Tarih/Saat:</strong> {{ appointment.date_time|date:"d F Y, H:i" }}</p>
+                    </div>
+                    
+                    <!-- Reschedule Form -->
+                    <form method="post" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {{ form.non_field_errors }}
+                            </div>
+                        {% endif %}
+                        
+                        <div class="mb-3">
+                            {{ form.new_date_time.label_tag }}
+                            {{ form.new_date_time }}
+                            {% if form.new_date_time.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.new_date_time.errors.as_text }}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Randevu en az 2 saat sonrası için planlanabilir.
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            {{ form.reason.label_tag }}
+                            {{ form.reason }}
+                            {% if form.reason.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.reason.errors.as_text }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'appointment_detail' uuid=appointment.uuid %}" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i>İptal
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Değişiklikleri Kaydet
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

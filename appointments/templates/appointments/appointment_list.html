@@ -1,0 +1,326 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Randevularım - BeautyTime{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Header Section -->
+    <div class="row mb-4" data-aos="fade-up">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center flex-wrap">
+                <div>
+                    <h1 class="display-5 fw-bold mb-2">
+                        <i class="fas fa-calendar-alt me-3 text-primary"></i>Randevularım
+                    </h1>
+                    <p class="text-muted">Tüm randevularınızı buradan takip edebilirsiniz</p>
+                </div>
+                <div>
+                    <a class="btn btn-primary btn-lg" href="{% url 'appointment_create' %}">
+                        <i class="fas fa-plus-circle me-2"></i>Yeni Randevu
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row g-4 mb-4" data-aos="fade-up" data-aos-delay="100">
+        <div class="col-lg-3 col-md-6">
+            <div class="stats-card">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <i class="fas fa-clock text-warning" style="font-size: 2rem;"></i>
+                    </div>
+                    <div>
+                        <h3 class="mb-0">{{ appointments|length }}</h3>
+                        <small class="text-muted">Toplam Randevu</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="stats-card">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <i class="fas fa-hourglass-half text-info" style="font-size: 2rem;"></i>
+                    </div>
+                    <div>
+                        <h3 class="mb-0">0</h3>
+                        <small class="text-muted">Beklemede</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="stats-card">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <i class="fas fa-check-circle text-success" style="font-size: 2rem;"></i>
+                    </div>
+                    <div>
+                        <h3 class="mb-0">0</h3>
+                        <small class="text-muted">Onaylandı</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="stats-card">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <i class="fas fa-star text-warning" style="font-size: 2rem;"></i>
+                    </div>
+                    <div>
+                        <h3 class="mb-0">0</h3>
+                        <small class="text-muted">Tamamlandı</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter and Search -->
+    <div class="row mb-4" data-aos="fade-up" data-aos-delay="200">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="row g-3 align-items-center">
+                        <div class="col-lg-4 col-md-6">
+                            <label class="form-label fw-bold">Durum Filtresi</label>
+                            <select class="form-select" id="statusFilter">
+                                <option value="">Tüm Durumlar</option>
+                                <option value="pending">Beklemede</option>
+                                <option value="confirmed">Onaylandı</option>
+                                <option value="completed">Tamamlandı</option>
+                                <option value="cancelled">İptal Edildi</option>
+                            </select>
+                        </div>
+                        <div class="col-lg-4 col-md-6">
+                            <label class="form-label fw-bold">Hizmet Filtresi</label>
+                            <select class="form-select" id="serviceFilter">
+                                <option value="">Tüm Hizmetler</option>
+                                {% for appointment in appointments %}
+                                    <option value="{{ appointment.service.name }}">{{ appointment.service.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-lg-4 col-md-12">
+                            <label class="form-label fw-bold">Arama</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                <input type="text" class="form-control" id="searchInput" placeholder="Randevu ara...">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Appointments -->
+    {% if appointments %}
+        <div class="row" id="appointmentsList">
+            {% for appointment in appointments %}
+                <div class="col-lg-6 col-xl-4 mb-4 appointment-item" 
+                     data-status="{{ appointment.status }}" 
+                     data-service="{{ appointment.service.name }}"
+                     data-appointment-uuid="{{ appointment.uuid }}"
+                     data-aos="fade-up" 
+                     data-aos-delay="{{ forloop.counter0|add:300 }}">
+                    <div class="card h-100 border-0 shadow-sm appointment-card">
+                        <div class="card-header border-0 bg-transparent pb-0">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h5 class="card-title mb-1">{{ appointment.service.name }}</h5>
+                                    <p class="text-muted mb-0">
+                                        <i class="fas fa-user-tie me-2"></i>{{ appointment.employee.name }}
+                                    </p>
+                                </div>
+                                <span class="badge appointment-status
+                                    {% if appointment.status == 'pending' %}bg-warning text-dark{% endif %}
+                                    {% if appointment.status == 'confirmed' %}bg-success{% endif %}
+                                    {% if appointment.status == 'cancelled' %}bg-danger{% endif %}
+                                    {% if appointment.status == 'completed' %}bg-info{% endif %}">
+                                    {{ appointment.get_status_display }}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="card-body pt-2">
+                            <div class="appointment-details">
+                                <div class="detail-item mb-3">
+                                    <i class="fas fa-calendar text-primary me-2"></i>
+                                    <strong>{{ appointment.date_time|date:"d F Y" }}</strong>
+                                </div>
+                                
+                                <div class="detail-item mb-3">
+                                    <i class="fas fa-clock text-primary me-2"></i>
+                                    <strong>{{ appointment.date_time|date:"H:i" }}</strong>
+                                    <small class="text-muted ms-2">({{ appointment.date_time|naturaltime }})</small>
+                                </div>
+                                
+                                <div class="detail-item mb-3">
+                                    <i class="fas fa-map-marker-alt text-primary me-2"></i>
+                                    <span>BeautyTime Salon</span>
+                                </div>
+                                
+                                {% if appointment.status == 'confirmed' %}
+                                    <div class="alert alert-success alert-sm">
+                                        <i class="fas fa-check-circle me-2"></i>
+                                        Randevunuz onaylandı! Saatinde salonumuzda olunuz.
+                                    </div>
+                                {% elif appointment.status == 'pending' %}
+                                    <div class="alert alert-warning alert-sm">
+                                        <i class="fas fa-hourglass-half me-2"></i>
+                                        Randevunuz onay bekliyor.
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="card-footer border-0 bg-transparent pt-0">
+                            <div class="mb-2 text-center">
+                                <a href="{% url 'appointment_detail' uuid=appointment.uuid %}" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-info-circle me-1"></i>Detayları Gör
+                                </a>
+                            </div>
+                            <div class="d-flex gap-2">
+                                {% if appointment.status == 'pending' or appointment.status == 'confirmed' %}
+                                    <button class="btn btn-outline-danger btn-sm flex-fill" 
+                                            onclick="cancelAppointment('{{ appointment.uuid }}', '{{ appointment.service.name|escapejs }}')">
+                                        <i class="fas fa-times me-1"></i>İptal Et
+                                    </button>
+                                    <button class="btn btn-outline-primary btn-sm" 
+                                            onclick="rescheduleAppointment('{{ appointment.uuid }}')">
+                                        <i class="fas fa-edit me-1"></i>Değiştir
+                                    </button>
+                                {% elif appointment.status == 'completed' %}
+                                    <button class="btn btn-outline-warning btn-sm flex-fill" 
+                                            onclick="rateAppointment('{{ appointment.uuid }}')">
+                                        <i class="fas fa-star me-1"></i>Değerlendir
+                                    </button>
+                                    <button class="btn btn-outline-success btn-sm" 
+                                            onclick="repeatAppointment('{{ appointment.uuid }}')">
+                                        <i class="fas fa-redo me-1"></i>Tekrarla
+                                    </button>
+                                {% else %}
+                                    <span class="text-muted fst-italic">İşlem yapılamaz</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="text-center py-5" data-aos="fade-up" data-aos-delay="300">
+            <div class="empty-state">
+                <i class="fas fa-calendar-times text-muted mb-4" style="font-size: 4rem;"></i>
+                <h3 class="text-muted mb-3">Henüz randevunuz bulunmuyor</h3>
+                <p class="text-muted mb-4">Güzellik yolculuğunuza başlamak için ilk randevunuzu oluşturun</p>
+                <a href="{% url 'appointment_create' %}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-plus-circle me-2"></i>İlk Randevumu Oluştur
+                </a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Cancel Appointment Modal -->
+<div class="modal fade" id="cancelModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle text-warning me-2"></i>Randevu İptali
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Bu randevuyu iptal etmek istediğinize emin misiniz?</p>
+                <div class="alert alert-warning">
+                    <strong id="cancelServiceName"></strong> randevunuz iptal edilecek ve bu işlem geri alınamaz.
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hayır, Vazgeç</button>
+                <a id="confirmCancelBtn" href="#" class="btn btn-danger">
+                    <i class="fas fa-times me-2"></i>Evet, İptal Et
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Filter functionality
+    const statusFilter = document.getElementById('statusFilter');
+    const serviceFilter = document.getElementById('serviceFilter');
+    const searchInput = document.getElementById('searchInput');
+    
+    function filterAppointments() {
+        const statusValue = statusFilter.value.toLowerCase();
+        const serviceValue = serviceFilter.value.toLowerCase();
+        const searchValue = searchInput.value.toLowerCase();
+        
+        const appointmentItems = document.querySelectorAll('.appointment-item');
+        
+        appointmentItems.forEach(item => {
+            const status = item.dataset.status.toLowerCase();
+            const service = item.dataset.service.toLowerCase();
+            const text = item.textContent.toLowerCase();
+            
+            const matchesStatus = !statusValue || status.includes(statusValue);
+            const matchesService = !serviceValue || service.includes(serviceValue);
+            const matchesSearch = !searchValue || text.includes(searchValue);
+            
+            if (matchesStatus && matchesService && matchesSearch) {
+                item.style.display = 'block';
+                item.style.opacity = '1';
+            } else {
+                item.style.display = 'none';
+                item.style.opacity = '0';
+            }
+        });
+    }
+    
+    statusFilter.addEventListener('change', filterAppointments);
+    serviceFilter.addEventListener('change', filterAppointments);
+    searchInput.addEventListener('input', filterAppointments);
+});
+
+function cancelAppointment(appointmentUuid, serviceName) {
+    document.getElementById('cancelServiceName').textContent = serviceName;
+    const cancelUrl = "{% url 'appointment_cancel' uuid='00000000-0000-0000-0000-000000000000' %}".replace('00000000-0000-0000-0000-000000000000', appointmentUuid);
+    document.getElementById('confirmCancelBtn').href = cancelUrl;
+    
+    const modal = new bootstrap.Modal(document.getElementById('cancelModal'));
+    modal.show();
+}
+
+function rescheduleAppointment(appointmentUuid) {
+    const rescheduleUrl = "{% url 'appointment_reschedule' uuid='00000000-0000-0000-0000-000000000000' %}".replace('00000000-0000-0000-0000-000000000000', appointmentUuid);
+    window.location.href = rescheduleUrl;
+}
+
+function rateAppointment(appointmentUuid) {
+    const reviewUrl = "{% url 'appointment_review' uuid='00000000-0000-0000-0000-000000000000' %}".replace('00000000-0000-0000-0000-000000000000', appointmentUuid);
+    window.location.href = reviewUrl;
+}
+
+function repeatAppointment(appointmentUuid) {
+    window.location.href = '{% url "appointment_create" %}?repeat=' + appointmentUuid;
+}
+
+// Auto-refresh for real-time updates
+setInterval(function() {
+    // Bu gerçek projede AJAX ile randevu durumlarını kontrol edecek
+    console.log('Checking for appointment updates...');
+}, 30000); // 30 saniyede bir
+</script>
+{% endblock %}

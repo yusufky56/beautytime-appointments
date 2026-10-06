@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+
+{% block title %}Randevu Değerlendirme - BeautyTime{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-gradient-primary text-white">
+                    <h2 class="h4 mb-0">
+                        <i class="fas fa-star me-2"></i>Randevu Değerlendirmesi
+                    </h2>
+                </div>
+                
+                <div class="card-body p-4">
+                    <!-- Appointment Info -->
+                    <div class="alert alert-light">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p class="mb-1"><strong>Hizmet:</strong> {{ appointment.service.name }}</p>
+                                <p class="mb-0"><strong>Uzman:</strong> {{ appointment.employee.name }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p class="mb-1"><strong>Tarih:</strong> {{ appointment.date_time|date:"d F Y" }}</p>
+                                <p class="mb-0"><strong>Saat:</strong> {{ appointment.date_time|date:"H:i" }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Review Form -->
+                    <form method="post" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {{ form.non_field_errors }}
+                            </div>
+                        {% endif %}
+                        
+                        <!-- Rating Fields -->
+                        <div class="row mb-4">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">{{ form.rating.label }}</label>
+                                <div class="rating-wrapper">
+                                    {{ form.rating }}
+                                </div>
+                                {% if form.rating.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.rating.errors.as_text }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">{{ form.service_rating.label }}</label>
+                                <div class="rating-wrapper">
+                                    {{ form.service_rating }}
+                                </div>
+                                {% if form.service_rating.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.service_rating.errors.as_text }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">{{ form.employee_rating.label }}</label>
+                                <div class="rating-wrapper">
+                                    {{ form.employee_rating }}
+                                </div>
+                                {% if form.employee_rating.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.employee_rating.errors.as_text }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">{{ form.cleanliness_rating.label }}</label>
+                                <div class="rating-wrapper">
+                                    {{ form.cleanliness_rating }}
+                                </div>
+                                {% if form.cleanliness_rating.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.cleanliness_rating.errors.as_text }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Text Fields -->
+                        <div class="mb-3">
+                            {{ form.title.label_tag }}
+                            {{ form.title }}
+                            {% if form.title.errors %}
+                                <div class="invalid-feedback d-block">{{ form.title.errors.as_text }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.comment.label_tag }}
+                            {{ form.comment }}
+                            {% if form.comment.errors %}
+                                <div class="invalid-feedback d-block">{{ form.comment.errors.as_text }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.pros.label_tag }}
+                                {{ form.pros }}
+                                {% if form.pros.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.pros.errors.as_text }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                {{ form.cons.label_tag }}
+                                {{ form.cons }}
+                                {% if form.cons.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.cons.errors.as_text }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <div class="form-check">
+                                {{ form.would_recommend }}
+                                <label class="form-check-label" for="{{ form.would_recommend.id_for_label }}">
+                                    {{ form.would_recommend.label }}
+                                </label>
+                            </div>
+                            {% if form.would_recommend.errors %}
+                                <div class="invalid-feedback d-block">{{ form.would_recommend.errors.as_text }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'appointment_detail' uuid=appointment.uuid %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Geri Dön
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-paper-plane me-2"></i>Değerlendirmeyi Gönder
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Rating Styles */
+.rating-wrapper {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.rating-wrapper input[type="radio"] {
+    display: none;
+}
+
+.rating-wrapper label {
+    cursor: pointer;
+    color: #ddd;
+    font-size: 1.5rem;
+    transition: color 0.2s;
+}
+
+.rating-wrapper input[type="radio"]:checked ~ label {
+    color: #ddd;
+}
+
+.rating-wrapper input[type="radio"]:checked + label,
+.rating-wrapper label:hover,
+.rating-wrapper label:hover ~ label {
+    color: #ffc107;
+}
+</style>
+{% endblock %}

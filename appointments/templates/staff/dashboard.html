@@ -1,0 +1,317 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Personel Paneli - BeautyTime{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h2 mb-0">
+                <i class="fas fa-tachometer-alt me-2"></i>Personel Paneli
+            </h1>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-2">Bugünkü Randevular</h6>
+                            <h3 class="mb-0">{{ stats.today_total }}</h3>
+                        </div>
+                        <div class="text-primary">
+                            <i class="fas fa-calendar-day fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-2">Onay Bekleyen</h6>
+                            <h3 class="mb-0 text-warning">{{ stats.overall_pending }}</h3>
+                        </div>
+                        <div class="text-warning">
+                            <i class="fas fa-hourglass-half fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-2">Bugün Onaylanan</h6>
+                            <h3 class="mb-0 text-success">{{ stats.today_confirmed }}</h3>
+                        </div>
+                        <div class="text-success">
+                            <i class="fas fa-check-circle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-2">Bugün Tamamlanan</h6>
+                            <h3 class="mb-0 text-info">{{ stats.today_completed }}</h3>
+                        </div>
+                        <div class="text-info">
+                            <i class="fas fa-check-double fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending Appointments -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-warning bg-opacity-10 border-0">
+                    <h5 class="mb-0">
+                        <i class="fas fa-clock me-2"></i>Onay Bekleyen Randevular
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if pending_appointments %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Müşteri</th>
+                                        <th>Hizmet</th>
+                                        <th>Uzman</th>
+                                        <th>Tarih/Saat</th>
+                                        <th>Oluşturulma</th>
+                                        <th>İşlemler</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for appointment in pending_appointments %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ appointment.user.get_full_name|default:appointment.user.username }}</strong><br>
+                                            <small class="text-muted">{{ appointment.user.email }}</small>
+                                        </td>
+                                        <td>{{ appointment.service.name }}</td>
+                                        <td>{{ appointment.employee.name }}</td>
+                                        <td>
+                                            <strong>{{ appointment.date_time|date:"d.m.Y" }}</strong><br>
+                                            <span class="badge bg-primary">{{ appointment.date_time|date:"H:i" }}</span>
+                                        </td>
+                                        <td>{{ appointment.created_at|naturaltime }}</td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <button type="button" class="btn btn-sm btn-success" 
+                                                        onclick="confirmAppointment('{{ appointment.uuid }}')">
+                                                    <i class="fas fa-check"></i> Onayla
+                                                </button>
+                                                <button type="button" class="btn btn-sm btn-danger" 
+                                                        onclick="rejectAppointment('{{ appointment.uuid }}')">
+                                                    <i class="fas fa-times"></i> Reddet
+                                                </button>
+                                                <a href="{% url 'appointment_detail' uuid=appointment.uuid %}" 
+                                                   class="btn btn-sm btn-info" target="_blank">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-check-circle text-success fa-3x mb-3"></i>
+                            <p class="text-muted">Onay bekleyen randevu bulunmuyor.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Today's Appointments -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-primary bg-opacity-10 border-0">
+                    <h5 class="mb-0">
+                        <i class="fas fa-calendar-day me-2"></i>Bugünkü Randevular
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if today_appointments %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Saat</th>
+                                        <th>Müşteri</th>
+                                        <th>Hizmet</th>
+                                        <th>Uzman</th>
+                                        <th>Durum</th>
+                                        <th>İşlemler</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for appointment in today_appointments %}
+                                    <tr>
+                                        <td>
+                                            <span class="badge bg-primary">{{ appointment.date_time|date:"H:i" }}</span>
+                                        </td>
+                                        <td>
+                                            {{ appointment.user.get_full_name|default:appointment.user.username }}
+                                            {% if appointment.user.profile.phone %}
+                                                <br><small class="text-muted">{{ appointment.user.profile.phone }}</small>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ appointment.service.name }}</td>
+                                        <td>{{ appointment.employee.name }}</td>
+                                        <td>
+                                            <span class="badge 
+                                                {% if appointment.status == 'pending' %}bg-warning{% endif %}
+                                                {% if appointment.status == 'confirmed' %}bg-success{% endif %}
+                                                {% if appointment.status == 'completed' %}bg-info{% endif %}
+                                                {% if appointment.status == 'cancelled' %}bg-danger{% endif %}">
+                                                {{ appointment.get_status_display }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                {% if appointment.status == 'confirmed' %}
+                                                    <button type="button" class="btn btn-sm btn-info"
+                                                            onclick="completeAppointment('{{ appointment.uuid }}')">
+                                                        <i class="fas fa-check-double"></i> Tamamla
+                                                    </button>
+                                                {% endif %}
+                                                <a href="{% url 'appointment_detail' uuid=appointment.uuid %}" 
+                                                   class="btn btn-sm btn-secondary" target="_blank">
+                                                    <i class="fas fa-eye"></i> Detay
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-calendar-times text-muted fa-3x mb-3"></i>
+                            <p class="text-muted">Bugün için randevu bulunmuyor.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modals -->
+<div class="modal fade" id="rejectModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="rejectForm" method="post">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title">Randevu Reddetme</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="rejection_reason" class="form-label">Red Nedeni</label>
+                        <textarea class="form-control" id="rejection_reason" name="rejection_reason" 
+                                  rows="3" required placeholder="Lütfen red nedenini belirtin..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                    <button type="submit" class="btn btn-danger">Randevuyu Reddet</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmAppointment(uuid) {
+    if (confirm('Bu randevuyu onaylamak istediğinize emin misiniz?')) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/staff/appointments/${uuid}/manage/`;
+        
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = 'csrfmiddlewaretoken';
+        csrfInput.value = csrfToken;
+        
+        const actionInput = document.createElement('input');
+        actionInput.type = 'hidden';
+        actionInput.name = 'action';
+        actionInput.value = 'confirm';
+        
+        form.appendChild(csrfInput);
+        form.appendChild(actionInput);
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+function rejectAppointment(uuid) {
+    const modal = new bootstrap.Modal(document.getElementById('rejectModal'));
+    const form = document.getElementById('rejectForm');
+    form.action = `/staff/appointments/${uuid}/manage/`;
+    
+    const actionInput = document.createElement('input');
+    actionInput.type = 'hidden';
+    actionInput.name = 'action';
+    actionInput.value = 'reject';
+    form.appendChild(actionInput);
+    
+    modal.show();
+}
+
+function completeAppointment(uuid) {
+    if (confirm('Bu randevuyu tamamlandı olarak işaretlemek istediğinize emin misiniz?')) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/staff/appointments/${uuid}/manage/`;
+        
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = 'csrfmiddlewaretoken';
+        csrfInput.value = csrfToken;
+        
+        const actionInput = document.createElement('input');
+        actionInput.type = 'hidden';
+        actionInput.name = 'action';
+        actionInput.value = 'complete';
+        
+        form.appendChild(csrfInput);
+        form.appendChild(actionInput);
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+</script>
+{% endblock %}

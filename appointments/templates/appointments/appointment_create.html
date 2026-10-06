@@ -1,0 +1,628 @@
+{% extends "base.html" %}
+
+{% block title %}Randevu Oluştur - BeautyTime{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-lg border-0" data-aos="fade-up">
+                <div class="card-header bg-gradient-primary text-white text-center py-4">
+                    <h1 class="card-title mb-0 h3">
+                        <i class="fas fa-calendar-plus me-2"></i>Yeni Randevu Oluştur
+                    </h1>
+                    <p class="mb-0 mt-2 opacity-75">Güzellik yolculuğunuza bir adım daha yaklaşın</p>
+                </div>
+                
+                <div class="card-body p-4">
+                    <!-- Step Indicator -->
+                    <div class="step-indicator mb-4">
+                        <div class="step active" data-step="1">
+                            <i class="fas fa-spa"></i>
+                            <span>Hizmet</span>
+                        </div>
+                        <div class="step" data-step="2">
+                            <i class="fas fa-user-tie"></i>
+                            <span>Uzman</span>
+                        </div>
+                        <div class="step" data-step="3">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span>Tarih & Saat</span>
+                        </div>
+                        <div class="step" data-step="4">
+                            <i class="fas fa-check"></i>
+                            <span>Onay</span>
+                        </div>
+                    </div>
+                    
+                    <form method="post" id="appointmentForm" action="{% url 'appointment_create' %}">
+                        {% csrf_token %}
+                        
+                        <!-- Step 1: Service Selection -->
+                        <div class="step-content" id="step1">
+                            <h5 class="mb-3">
+                                <i class="fas fa-spa me-2 text-primary"></i>Hangi hizmeti almak istiyorsunuz?
+                            </h5>
+                            <div class="mb-3">
+                                <label for="service_category" class="form-label fw-bold">Kategori Seçin:</label>
+                                <select id="service_category" class="form-select form-select-lg mb-3">
+                                    <option value="">Tüm Kategoriler</option>
+                                    {% for category in categories %}
+                                    <option value="{{ category.id }}">{{ category.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="row g-3" id="serviceSelection">
+                                <!-- Services will be loaded here by JavaScript -->
+                                <p id="serviceLoadingMessage">Hizmetler yükleniyor...</p>
+                            </div>
+                            <input type="hidden" name="service" id="selectedService" required>
+                        </div>
+                        
+                        <!-- Step 2: Employee Selection -->
+                        <div class="step-content d-none" id="step2">
+                            <h5 class="mb-3">
+                                <i class="fas fa-user-tie me-2 text-primary"></i>Hangi uzmanımızdan hizmet almak istiyorsunuz?
+                            </h5>
+                            <div class="row g-3" id="employeeSelection">
+                                <!-- Employees will be loaded here by JavaScript -->
+                                <p id="employeeLoadingMessage">Uzmanlar yükleniyor...</p>
+                            </div>
+                            <input type="hidden" name="employee" id="selectedEmployee" required>
+                        </div>
+                        
+                        <!-- Step 3: Date & Time Selection -->
+                        <div class="step-content d-none" id="step3">
+                            <h5 class="mb-3">
+                                <i class="fas fa-calendar-alt me-2 text-primary"></i>Hangi tarih ve saatte randevu almak istiyorsunuz?
+                            </h5>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="appointmentDate" class="form-label fw-bold">Tarih Seçin</label>
+                                    <input type="date" class="form-control form-control-lg" id="appointmentDate" name="appointment_date_only" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Saat Seçin</label>
+                                    <div id="timeSlots" class="time-slots">
+                                        <!-- Time slots will be loaded here by JavaScript -->
+                                        <p id="timeSlotsLoadingMessage">Lütfen tarih ve uzman seçin.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <input type="hidden" name="date_time" id="selectedDateTime" required>
+                        </div>
+                        
+                        <!-- Step 4: Summary -->
+                        <div class="step-content d-none" id="step4">
+                            <h5 class="mb-3">
+                                <i class="fas fa-check-circle me-2 text-success"></i>Randevu Özeti
+                            </h5>
+                            <div class="alert alert-info">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <strong>Hizmet:</strong> <span id="summaryService">-</span><br>
+                                        <strong>Uzman:</strong> <span id="summaryEmployee">-</span>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <strong>Tarih:</strong> <span id="summaryDate">-</span><br>
+                                        <strong>Saat:</strong> <span id="summaryTime">-</span>
+                                    </div>
+                                </div>
+                                <hr>
+                                <div class="text-center">
+                                    <strong>Toplam Ücret: <span id="summaryPrice" class="text-success">₺0</span></strong>
+                                </div>
+                            </div>
+                            
+                            <div class="alert alert-warning">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>Önemli:</strong> Randevunuz oluşturulduktan sonra onay bekleyecektir. Randevu saatinden en az 2 saat önce iptal edebilirsiniz.
+                            </div>
+                        </div>
+                        
+                        <!-- Navigation Buttons -->
+                        <div class="d-flex justify-content-between mt-4">
+                            <button type="button" class="btn btn-outline-secondary btn-lg" id="prevBtn" onclick="changeStep(-1)" style="display: none;">
+                                <i class="fas fa-arrow-left me-2"></i>Geri
+                            </button>
+                            <button type="button" class="btn btn-primary btn-lg" id="nextBtn" onclick="changeStep(1)">
+                                İleri <i class="fas fa-arrow-right ms-2"></i>
+                            </button>
+                            <button type="submit" class="btn btn-success btn-lg" id="submitBtn" style="display: none;">
+                                <i class="fas fa-check me-2"></i>Randevuyu Onayla
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Step Indicator */
+.step-indicator {
+    display: flex;
+    justify-content: space-between;
+    position: relative;
+    margin-bottom: 2rem;
+}
+
+.step-indicator::before {
+    content: '';
+    position: absolute;
+    top: 20px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: #e2e8f0;
+    z-index: 1;
+}
+
+.step {
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-radius: 50px;
+    padding: 0.75rem 1rem;
+    text-align: center;
+    position: relative;
+    z-index: 3;
+    min-width: 100px;
+    transition: all 0.3s ease;
+}
+
+.step.active {
+    border-color: var(--primary-color);
+    background: var(--primary-color);
+    color: white;
+    transform: scale(1.05);
+}
+
+.step.completed {
+    border-color: var(--success-color);
+    background: var(--success-color);
+    color: white;
+}
+
+.step i {
+    display: block;
+    font-size: 1.2rem;
+    margin-bottom: 0.25rem;
+}
+
+.step span {
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+/* Service and Employee Cards */
+.service-card, .employee-card {
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 1.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: white;
+    height: 100%;
+    text-align: center;
+}
+
+.service-card:hover, .employee-card:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+    transform: translateY(-2px);
+}
+
+.service-card.selected, .employee-card.selected {
+    border-color: var(--primary-color);
+    background: rgba(102, 126, 234, 0.05);
+}
+
+.service-icon, .employee-avatar {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5rem;
+    margin: 0 auto 1rem;
+}
+
+/* Time Slots */
+.time-slots {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+    gap: 0.5rem;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.time-slot {
+    padding: 0.75rem 0.5rem;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: white;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.time-slot:hover {
+    border-color: var(--primary-color);
+    background: rgba(102, 126, 234, 0.05);
+}
+
+.time-slot.selected {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.time-slot.unavailable {
+    background: #f8f9fa;
+    color: #94a3b8;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.time-slot.unavailable:hover {
+    transform: none;
+    border-color: #e2e8f0;
+    background: #f8f9fa;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+{{ super }}
+<script>
+let currentStep = 1;
+const totalSteps = 4;
+let allServices = []; // Store all fetched services
+let selectedData = {
+    service: null,
+    employee: null,
+    date: null,
+    time: null,
+    price: null,
+    serviceName: null,
+    employeeName: null
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('appointmentDate').min = today;
+    
+    fetchAllServices(); // Fetch all services initially
+
+    document.getElementById('service_category').addEventListener('change', function() {
+        filterAndLoadServices(this.value);
+    });
+    
+    document.getElementById('appointmentDate').addEventListener('change', function() {
+        selectedData.date = this.value;
+        if (selectedData.employee && selectedData.service) {
+            loadTimeSlots(this.value, selectedData.employee.id, selectedData.service.id);
+        } else {
+            document.getElementById('timeSlots').innerHTML = '<p class="text-muted">Lütfen önce uzman ve hizmet seçin.</p>';
+        }
+    });
+    
+    document.getElementById('appointmentForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        if (!selectedData.service || !selectedData.employee || !selectedData.date || !selectedData.time) {
+            toastr.error('Lütfen tüm adımları tamamlayın.');
+            return;
+        }
+        
+        const submitBtn = document.getElementById('submitBtn');
+        BeautyTime.showLoadingButton(submitBtn); // Use global function
+        
+        const formData = new FormData(this);
+        // Hidden inputs are already filled, no need to append manually again for service, employee, date_time if their names match the form.
+        // Ensure 'date_time' hidden input is correctly populated before submission.
+        // It's already done in selectTime: document.getElementById('selectedDateTime').value = selectedData.date + 'T' + time + ':00';
+        
+        fetch(this.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => response.json().then(data => ({status: response.status, body: data})))
+        .then(({status, body}) => {
+            if (status === 200 && body.success) { // Assuming your view returns JSON with success status
+                toastr.success(body.message || 'Randevunuz başarıyla oluşturuldu!');
+                window.location.href = body.redirect_url || "{% url 'appointment_list' %}";
+            } else {
+                toastr.error(body.error || 'Randevu oluşturulamadı. Lütfen bilgileri kontrol edin.');
+                submitBtn.innerHTML = '<i class="fas fa-check me-2"></i>Randevuyu Onayla';
+                submitBtn.disabled = false;
+            }
+        })
+        .catch(error => {
+            console.error("Form submission error:", error);
+            toastr.error('Randevu oluşturulurken bir ağ hatası oluştu.');
+            submitBtn.innerHTML = '<i class="fas fa-check me-2"></i>Randevuyu Onayla';
+            submitBtn.disabled = false;
+        });
+    });
+});
+
+function fetchAllServices() {
+    const serviceContainer = document.getElementById('serviceSelection');
+    document.getElementById('serviceLoadingMessage').style.display = 'block';
+    fetch("{% url 'api_services' %}")
+        .then(response => response.json())
+        .then(data => {
+            allServices = data;
+            filterAndLoadServices(''); // Load all services initially
+            document.getElementById('serviceLoadingMessage').style.display = 'none';
+        })
+        .catch(error => {
+            console.error("Error fetching services:", error);
+            serviceContainer.innerHTML = '<p class="text-danger">Hizmetler yüklenirken bir hata oluştu.</p>';
+            document.getElementById('serviceLoadingMessage').style.display = 'none';
+        });
+}
+
+function filterAndLoadServices(categoryId) {
+    const container = document.getElementById('serviceSelection');
+    container.innerHTML = '';
+    
+    const filteredServices = categoryId 
+        ? allServices.filter(service => service.category_id == categoryId) // Assuming API returns category_id
+        : allServices;
+
+    if (filteredServices.length === 0) {
+        container.innerHTML = '<p class="text-muted">Bu kategoride hizmet bulunmamaktadır veya tüm hizmetler yüklenemedi.</p>';
+        return;
+    }
+
+    filteredServices.forEach(service => {
+        const serviceCard = document.createElement('div');
+        serviceCard.className = 'col-md-6 col-lg-4';
+        // Default icon if not provided by API
+        const iconClass = service.icon || 'fas fa-concierge-bell'; 
+        serviceCard.innerHTML = `
+            <div class="service-card" onclick="selectService(event, ${service.id})">
+                <div class="service-icon">
+                    <i class="${iconClass}"></i>
+                </div>
+                <h6 class="mb-2">${service.name}</h6>
+                <div class="mb-2">
+                    <span class="badge bg-primary">₺${service.price}</span>
+                </div>
+                <small class="text-muted">
+                    <i class="fas fa-clock me-1"></i>${service.duration} dakika
+                </small>
+            </div>
+        `;
+        container.appendChild(serviceCard);
+    });
+}
+
+
+function selectService(event, serviceId) {
+    const service = allServices.find(s => s.id === serviceId);
+    if (!service) return;
+
+    selectedData.service = service;
+    selectedData.serviceName = service.name;
+    selectedData.price = service.price;
+    
+    document.querySelectorAll('#serviceSelection .service-card').forEach(card => {
+        card.classList.remove('selected');
+    });
+    event.currentTarget.classList.add('selected');
+    
+    document.getElementById('selectedService').value = serviceId;
+    loadEmployees(serviceId);
+    changeStep(1); // Automatically move to next step
+}
+
+function loadEmployees(serviceId) {
+    const container = document.getElementById('employeeSelection');
+    container.innerHTML = '<p id="employeeLoadingMessage">Uzmanlar yükleniyor...</p>';
+    fetch(`{% url 'api_employees' %}?service_id=${serviceId}`)
+        .then(response => response.json())
+        .then(data => {
+            container.innerHTML = '';
+            if (data.length === 0) {
+                container.innerHTML = '<p class="text-muted">Bu hizmet için uygun uzman bulunamadı.</p>';
+                return;
+            }
+            data.forEach(employee => {
+                const employeeCard = document.createElement('div');
+                employeeCard.className = 'col-md-6 col-lg-4';
+                const avatarIcon = employee.icon || 'fas fa-user-tie';
+                const rating = employee.average_rating || 0;
+                const stars = '★'.repeat(Math.floor(rating)) + '☆'.repeat(5 - Math.floor(rating));
+
+                employeeCard.innerHTML = `
+                    <div class="employee-card" onclick="selectEmployee(event, ${employee.id}, '${employee.name}')">
+                        <div class="employee-avatar">
+                            <i class="${avatarIcon}"></i>
+                        </div>
+                        <h6 class="mb-1">${employee.name}</h6>
+                        <p class="text-muted mb-2 small">${employee.specialty}</p>
+                        <div>
+                            <span class="text-warning">${stars}</span>
+                            <small class="text-muted">${rating.toFixed(1)}</small>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(employeeCard);
+            });
+        })
+        .catch(error => {
+            console.error("Error fetching employees:", error);
+            container.innerHTML = '<p class="text-danger">Uzmanlar yüklenirken bir hata oluştu.</p>';
+        });
+}
+
+function selectEmployee(event, employeeId, employeeName) {
+    selectedData.employee = { id: employeeId, name: employeeName }; // Store basic employee info
+    selectedData.employeeName = employeeName;
+    
+    document.querySelectorAll('#employeeSelection .employee-card').forEach(card => {
+        card.classList.remove('selected');
+    });
+    event.currentTarget.classList.add('selected');
+    
+    document.getElementById('selectedEmployee').value = employeeId;
+    
+    const selectedDate = document.getElementById('appointmentDate').value;
+    if (selectedDate && selectedData.service) {
+        loadTimeSlots(selectedDate, employeeId, selectedData.service.id);
+    }
+    changeStep(1); // Automatically move to next step
+}
+
+function loadTimeSlots(date, employeeId, serviceId) {
+    const container = document.getElementById('timeSlots');
+    container.innerHTML = '<p id="timeSlotsLoadingMessage">Uygun saatler yükleniyor...</p>';
+    
+    console.log('Loading time slots for:', { date, employeeId, serviceId });
+    
+    fetch(`{% url 'api_available_times' %}?date=${date}&employee_id=${employeeId}&service_id=${serviceId}`)
+        .then(response => {
+            console.log('Response status:', response.status);
+            return response.json();
+        })
+        .then(data => {
+            console.log('Time slots data:', data);
+            container.innerHTML = '';
+            
+            if (data.error) {
+                container.innerHTML = `<p class="text-danger">${data.error}</p>`;
+                return;
+            }
+            if (!data.time_slots || data.time_slots.length === 0) {
+                container.innerHTML = '<p class="text-muted">Bu tarih için uygun saat bulunamadı.</p>';
+                return;
+            }
+            
+            data.time_slots.forEach(time => {
+                const timeSlot = document.createElement('div');
+                timeSlot.className = 'time-slot';
+                timeSlot.textContent = time;
+                timeSlot.onclick = (e) => selectTime(e, time);
+                container.appendChild(timeSlot);
+            });
+        })
+        .catch(error => {
+            console.error("Error fetching time slots:", error);
+            container.innerHTML = `<p class="text-danger">Saatler yüklenirken bir hata oluştu: ${error.message}</p>`;
+        });
+}
+
+function selectTime(event, time) {
+    if (event.currentTarget.classList.contains('unavailable')) return;
+    
+    selectedData.time = time;
+    
+    document.querySelectorAll('.time-slot').forEach(slot => {
+        slot.classList.remove('selected');
+    });
+    event.currentTarget.classList.add('selected');
+    
+    document.getElementById('selectedDateTime').value = selectedData.date + 'T' + time + ':00';
+    updateSummary();
+    changeStep(1); // Automatically move to next step
+}
+
+function changeStep(direction) {
+    const previousStep = currentStep;
+    if (direction === 1) {
+        if (!validateStep(currentStep)) return;
+        if (currentStep < totalSteps) currentStep++;
+    } else {
+        if (currentStep > 1) currentStep--;
+    }
+    
+    if (previousStep !== currentStep) { // Only update if step actually changed
+        showStep(currentStep);
+        updateStepIndicator();
+        updateButtons();
+    }
+}
+
+function validateStep(step) {
+    switch(step) {
+        case 1:
+            if (!selectedData.service) {
+                toastr.error('Lütfen bir hizmet seçin.');
+                return false;
+            }
+            break;
+        case 2:
+            if (!selectedData.employee) {
+                toastr.error('Lütfen bir uzman seçin.');
+                return false;
+            }
+            break;
+        case 3:
+            const date = document.getElementById('appointmentDate').value;
+            const time = selectedData.time;
+            if (!date) {
+                toastr.error('Lütfen bir tarih seçin.');
+                return false;
+            }
+            if (!time) {
+                toastr.error('Lütfen bir saat seçin.');
+                return false;
+            }
+            selectedData.date = date; // Ensure date is set from input
+            break;
+    }
+    return true;
+}
+
+function showStep(stepNum) {
+    document.querySelectorAll('.step-content').forEach(content => {
+        content.classList.add('d-none');
+    });
+    const currentStepContent = document.getElementById(`step${stepNum}`);
+    if (currentStepContent) {
+      currentStepContent.classList.remove('d-none');
+    }
+}
+
+function updateStepIndicator() {
+    document.querySelectorAll('.step-indicator .step').forEach((stepEl, index) => {
+        stepEl.classList.remove('active', 'completed');
+        if (index + 1 < currentStep) {
+            stepEl.classList.add('completed');
+        } else if (index + 1 === currentStep) {
+            stepEl.classList.add('active');
+        }
+    });
+}
+
+function updateButtons() {
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    prevBtn.style.display = currentStep === 1 ? 'none' : 'inline-block';
+    nextBtn.style.display = currentStep === totalSteps ? 'none' : 'inline-block';
+    submitBtn.style.display = currentStep === totalSteps ? 'inline-block' : 'none';
+}
+
+function updateSummary() {
+    if (selectedData.serviceName) document.getElementById('summaryService').textContent = selectedData.serviceName;
+    if (selectedData.employeeName) document.getElementById('summaryEmployee').textContent = selectedData.employeeName;
+    if (selectedData.date) document.getElementById('summaryDate').textContent = new Date(selectedData.date).toLocaleDateString('tr-TR', { year: 'numeric', month: 'long', day: 'numeric' });
+    if (selectedData.time) document.getElementById('summaryTime').textContent = selectedData.time;
+    if (selectedData.price) document.getElementById('summaryPrice').textContent = '₺' + selectedData.price;
+}
+</script>
+{% endblock %}

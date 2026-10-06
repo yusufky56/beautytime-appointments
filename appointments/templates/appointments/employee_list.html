@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}Uzmanlarımız - BeautyTime{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <h1 class="display-4 fw-bold">Uzman Ekibimiz</h1>
+        <p class="lead text-muted">Deneyimli ve profesyonel ekibimizle tanışın</p>
+    </div>
+
+    <div class="row g-4">
+        {% for employee in employees %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body text-center">
+                        <div class="mb-3">
+                            {% if employee.photo %}
+                                <img src="{{ employee.photo.url }}" alt="{{ employee.name }}" 
+                                     class="rounded-circle" style="width: 120px; height: 120px; object-fit: cover;">
+                            {% else %}
+                                <div class="rounded-circle bg-gradient-primary text-white d-inline-flex align-items-center justify-content-center" 
+                                     style="width: 120px; height: 120px;">
+                                    <i class="fas fa-user fa-3x"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <h5 class="card-title">{{ employee.name }}</h5>
+                        <p class="text-muted">{{ employee.title }}</p>
+                        <p class="small">{{ employee.specialty }}</p>
+                        
+                        <div class="mb-3">
+                            <span class="text-warning">
+                                {% for i in "12345"|make_list %}
+                                    {% if i|add:0 <= employee.average_rating %}
+                                        <i class="fas fa-star"></i>
+                                    {% else %}
+                                        <i class="far fa-star"></i>
+                                    {% endif %}
+                                {% endfor %}
+                            </span>
+                            <small class="text-muted">({{ employee.average_rating|floatformat:1 }})</small>
+                        </div>
+                        
+                        <h6>Verdiği Hizmetler:</h6>
+                        <div class="mb-3">
+                            {% for service in employee.services.all %}
+                                <span class="badge bg-secondary m-1">{{ service.name }}</span>
+                            {% endfor %}
+                        </div>
+                        
+                        <a href="{% url 'appointment_create' %}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-calendar-plus me-1"></i>Randevu Al
+                        </a>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

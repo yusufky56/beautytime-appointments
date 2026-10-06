@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Bildirimlerim - Online Randevu Sistemi{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h2">Bildirimlerim</h1>
+    {# <button class="btn btn-sm btn-outline-secondary">Tümünü Okundu İşaretle</button> #}
+</div>
+
+{% if notifications %}
+<div class="list-group shadow-sm">
+    {% for notification in notifications %}
+    <div class="list-group-item list-group-item-action {% if not notification.is_read %}list-group-item-light fw-bold{% endif %}" aria-current="true">
+        <div class="d-flex w-100 justify-content-between">
+            <p class="mb-1">{{ notification.message }}</p>
+            <small class="text-muted">{{ notification.created_at|naturaltime }}</small>
+        </div>
+        <small class="text-muted">{{ notification.created_at|date:"d F Y, H:i" }}</small>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="alert alert-info text-center" role="alert">
+    <i class="bi bi-bell-slash-fill me-2"></i>Henüz bir bildiriminiz yok.
+</div>
+{% endif %}
+
+{# Sayfalama eklenebilir #}
+
+{% endblock %}

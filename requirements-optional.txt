@@ -1,0 +1,6 @@
+-r requirements.txt
+# SQL Server support (DB_ENGINE=mssql)
+mssql-django>=1.4
+pyodbc>=5.0
+# SMS notifications (optional)
+twilio>=8.9
