@@ -86,3 +86,7 @@ randevu_sistemi/           # Project settings and URLs
 load_initial_data.py       # Sample data
 create_test_users.py       # Demo accounts
 ```
+
+## License
+
+[MIT](LICENSE)
